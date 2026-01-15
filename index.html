@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>買い物比較フルプロトタイプ</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-sA+e2jvH7qq6q8v+Xf5xk0s1t2vQqv3uZfX3x0i0m0o=" crossorigin=""/>
+
+<style>
+  :root{--accent:rgb(0, 150, 187);--muted:#666;--card:#ffffff;--bg:#f6f7fb;}
+  body{font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "メイリオ", "Noto Sans JP", Arial; background:var(--bg); color:#111; margin:0}
+  header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 18px; display:flex; gap:12px; align-items:center; border-bottom:1px solid #e4e7ef}
+  h1{margin:0;font-size:18px}
+  main{display:flex; gap:18px; padding:18px; flex-wrap:wrap}
+  .col{background:var(--card); border-radius:10px; box-shadow:0 1px 6px rgba(20,30,50,.06); padding:12px; flex:1; min-width:300px; max-width:720px}
+  label{display:block;margin:8px 0;font-size:13px}
+  input[type="text"], input[type="number"], select, textarea{width:100%; padding:8px; border-radius:6px; border:1px solid #d9dce6}
+  button{background:var(--accent); color:#022; border:none; padding:8px 12px; border-radius:8px; cursor:pointer}
+  .small{font-size:12px;color:var(--muted)}
+  .product{border:1px solid #e8eef4; padding:10px; margin:8px 0; border-radius:8px}
+  .cheap{background:#f0fff3}
+  nav{display:flex; gap:8px; align-items:center}
+  .tabs{display:flex; gap:6px; margin-bottom:8px}
+  .tab{padding:6px 10px; border-radius:8px; background:#fff; border:1px solid #e7e9ee; cursor:pointer}
+  .tab.active{background:var(--accent); color:#022; font-weight:700}
+  #map{height:330px; border-radius:8px}
+  .row{display:flex; gap:8px}
+  .chip{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #e7e9ee;background:#fff;font-size:12px;margin-right:6px}
+  .post{border-left:4px solid #eee;padding:8px;margin:8px 0;border-radius:6px;background:#fff}
+  .bad{color:#c00;font-weight:700}
+  .flex-between{display:flex;justify-content:space-between;align-items:center}
+  footer{padding:12px;text-align:center;color:#999}
+  .control-row{display:flex;gap:8px;align-items:center}
+  .mini{padding:6px 8px;font-size:13px}
+  .tag{font-size:12px;color:#444;background:#f6f7fb;padding:4px 6px;border-radius:6px;margin-right:6px}
+</style>
+</head>
+<body>
+<header>
+  <div style="flex:1">
+    <h1>安値ハンター</h1>
+
+  <div style="text-align:right">
+    <div class="small">ユーザー名</div>
+    <input id="username" placeholder="名前を入れてください" style="width:160px;padding:6px;border-radius:8px;border:1px solid #ddd">
+    <div class="small" style="margin-top:6px">通知：
+      <button class="mini" onclick="requestNotificationPermission()">通知許可</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- 左カラム：登録・検索・一覧 -->
+  <section class="col" style="flex:0.9">
+    <div class="tabs" id="mainTabs">
+      <div class="tab active" data-tab="products" onclick="switchTab('products')">商品一覧 / 比較</div>
+      <div class="tab" data-tab="shops" onclick="switchTab('shops')">店舗</div>
+      <div class="tab" data-tab="map" onclick="switchTab('map')">地図</div>
+      <div class="tab" data-tab="coupons" onclick="switchTab('coupons')">クーポン/通知</div>
+      <div class="tab" data-tab="bbs" onclick="switchTab('bbs')">掲示板</div>
+      <div class="tab" data-tab="recommend" onclick="switchTab('recommend')">おすすめ</div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="tab-products" class="tabpane">
+      <div class="flex-between">
+        <h3>商品登録（まとめ売り・小分け対応）</h3>
+        <div class="small">保存は自動で localStorage に保管されます</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <label>商品名 <input id="p_name" type="text"></label>
+          <label>カテゴリ 
+            <select id="p_category"></select>
+          </label>
+          <label>価格 (円) <input id="p_price" type="number"></label>
+          <label>個数（パック数 / 個数） <input id="p_qty" type="number" value="1"></label>
+        </div>
+        <div>
+          <label>1個あたりのグラム (g) <input id="p_unitg" type="number" value="100"></label>
+          <label>店　(店舗を作っていれば選択) <select id="p_shop"></select></label>
+          <label>メモ（任意） <input id="p_note" type="text"></label>
+          <div style="margin-top:8px">
+            <button onclick="addProduct()">商品を追加</button>
+            <button onclick="clearProducts()" style="margin-left:8px;background:#ddd;color:#000">全部消す</button>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row" style="margin-bottom:8px">
+        <input id="searchText" placeholder="商品名で検索" style="flex:1;padding:8px;border-radius:8px;border:1px solid #ddd">
+        <input id="maxPrice" type="number" placeholder="最大価格" style="width:120px">
+        <select id="filterCategory" style="width:160px">
+          <option value="">カテゴリで絞る</option>
+        </select>
+        <button onclick="renderList()">検索/更新</button>
+      </div>
+
+      <div id="productList"></div>
+    </div>
+
+    <!-- SHOPS TAB -->
+    <div id="tab-shops" class="tabpane" style="display:none">
+      <h3>店舗登録</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label>店名 <input id="s_name" type="text"></label>
+          <label>住所（任意） <input id="s_address" type="text"></label>
+          <label>支払い方法（カンマ区切り） <input id="s_payment" type="text" placeholder="現金,カード,電子マネー"></label>
+        </div>
+        <div>
+          <label>緯度 (lat) <input id="s_lat" type="text" placeholder="例:35.6895"></label>
+          <label>経度 (lng) <input id="s_lng" type="text" placeholder="例:139.6917"></label>
+          <div style="margin-top:8px">
+            <button onclick="addShop()">店舗を追加</button>
+            <button onclick="geocodeAddress()" style="margin-left:6px;background:#ddd;color:#000">住所から緯度経度取得</button>
+          </div>
+          <div class="small">※ 住所->緯度経度は Nominatim を使います（ネット接続が必要）</div>
+        </div>
+      </div>
+      <hr>
+      <div id="shopList"></div>
+    </div>
+
+    <!-- MAP TAB -->
+    <div id="tab-map" class="tabpane" style="display:none">
+      <h3>地図（店舗ピン）</h3>
+      <h3>ここをクリック</h3>
+      <a href="https://maps.google.com/">
+        <button>Click Me!</button>
+    </a>
+      <div id="map"></div>
+      <div class="small" style="margin-top:8px">地図上のピンをクリックすると店舗情報とその店の商品一覧が見られます。</div>
+    </div>
+
+    <!-- COUPONS TAB -->
+    <div id="tab-coupons" class="tabpane" style="display:none">
+      <h3>クーポン・タイムセール管理</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label>タイトル <input id="c_title" type="text"></label>
+          <label>店舗 (任意) <select id="c_shop"></select></label>
+        </div>
+        <div>
+          <label>説明 <input id="c_desc" type="text"></label>
+          <label>開始日時 (ローカル) <input id="c_start" type="datetime-local"></label>
+          <label>終了日時 (ローカル) <input id="c_end" type="datetime-local"></label>
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <button onclick="addCoupon()">クーポン作成（通知を試行）</button>
+      </div>
+      <hr>
+      <div id="couponList"></div>
+    </div>
+
+    <!-- BBS TAB -->
+    <div id="tab-bbs" class="tabpane" style="display:none">
+      <h3>掲示板（SNS風）</h3>
+      <label>スレッドタイトル <input id="t_title" type="text"></label>
+      <label>内容 <textarea id="t_body" rows="3"></textarea></label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="addThread()">投稿する</button>
+        <div class="small">通報が <b>3回</b> 以上の投稿者は投稿機能を停止します（自動）</div>
+      </div>
+      <hr>
+      <div id="threadList"></div>
+    </div>
+
+    <!-- RECOMMEND TAB -->
+    <div id="tab-recommend" class="tabpane" style="display:none">
+      <h3>あなたへのおすすめ（簡易レコメンド）</h3>
+      <div class="small">ルール: g/円 の安い商品 + あなたが保存した商品種（お気に入り）を優先</div>
+      <div id="recommendList"></div>
+    </div>
+  </section>
+
+  <!-- 右カラム：比較ビュー / 詳細 / 保存 -->
+  <aside class="col" style="flex:0.45; min-width:320px;">
+    <h3>店ごとの横並び比較</h3>
+    <label>比較したい商品名 (部分一致) <input id="cmpName" type="text"></label>
+    <button onclick="compareByName()">比較する</button>
+    <div id="comparison"></div>
+
+    <hr>
+
+    <h3>お気に入り / ローカル保存</h3>
+    <div style="display:flex;gap:8px">
+      <button onclick="saveState()">今の状態を手動保存</button>
+      <button onclick="loadState()">読み込む</button>
+      <button onclick="exportState()">JSON 書き出し</button>
+      <button onclick="importState()">JSON 読込</button>
+    </div>
+    <div style="margin-top:8px" id="statusArea"></div>
+
+    <hr>
+
+    <h3>ヘルプ / Tips</h3>
+    <ul class="small">
+      <li>商品は <b>個数 × 1個あたりのg</b> で合計グラムを計算し、<b>円/グラム</b> を算出します。</li>
+      <li>掲示板は簡易ユーザー名ベースです。本番では認証を別途導入してください。</li>
+      <li>地図の緯度経度は Nominatim で取得できます（API制限あり）。</li>
+    </ul>
+  </aside>
+</main>
+
+<footer>プロトタイプ — ローカルデータ保存 / Leaflet 地図 / Notification API の試用</footer>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-o9N1j6wE1k1tM5QhVj2y3o3y2m0k0w4u3nq8hKXgYxk=" crossorigin=""></script>
+
+<script>
+/* -------------------------
+   初期データ & 永続化関数
+   ------------------------- */
+let products = JSON.parse(localStorage.getItem('products_v1')||'[]');
+let shops = JSON.parse(localStorage.getItem('shops_v1')||'[]');
+let coupons = JSON.parse(localStorage.getItem('coupons_v1')||'[]');
+let threads = JSON.parse(localStorage.getItem('threads_v1')||'[]');
+let userReports = JSON.parse(localStorage.getItem('reports_v1')||'{}'); // {username: count}
+let favorites = JSON.parse(localStorage.getItem('fav_v1')||'[]');
+
+function persistAll(){
+  localStorage.setItem('products_v1', JSON.stringify(products));
+  localStorage.setItem('shops_v1', JSON.stringify(shops));
+  localStorage.setItem('coupons_v1', JSON.stringify(coupons));
+  localStorage.setItem('threads_v1', JSON.stringify(threads));
+  localStorage.setItem('reports_v1', JSON.stringify(userReports));
+  localStorage.setItem('fav_v1', JSON.stringify(favorites));
+  document.getElementById('statusArea').innerText = '最後の保存: ' + new Date().toLocaleString();
+}
+
+/* -------------------------
+   タブ切替
+   ------------------------- */
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
+  document.querySelectorAll('.tabpane').forEach(p=>p.style.display='none');
+  document.getElementById('tab-' + id).style.display = 'block';
+  if(id==='map') setTimeout(()=>map.invalidateSize(),300);
+  if(id==='shops') renderShops();
+  if(id==='products') renderList();
+  if(id==='coupons') renderCoupons();
+  if(id==='bbs') renderThreads();
+  if(id==='recommend') renderRecommend();
+}
+function switchTabInit(){ switchTab('products') }
+setTimeout(switchTabInit,100);
+
+/* -------------------------
+   カテゴリ初期化
+   ------------------------- */
+const defaultCats = ['食品','飲料','日用品','自販機','冷凍食品','その他'];
+function refreshCategories(){
+  const sel = document.getElementById('p_category');
+  const filter = document.getElementById('filterCategory');
+  sel.innerHTML = '';
+  filter.innerHTML = '<option value="">カテゴリで絞る</option>';
+  defaultCats.forEach(c=>{
+    const opt = document.createElement('option'); opt.value=c; opt.textContent=c; sel.appendChild(opt);
+    const opt2 = document.createElement('option'); opt2.value=c; opt2.textContent=c; filter.appendChild(opt2);
+  });
+}
+refreshCategories();
+
+/* -------------------------
+   店舗関連
+   ------------------------- */
+function addShop(){
+  const name = document.getElementById('s_name').value.trim();
+  const address = document.getElementById('s_address').value.trim();
+  const payment = document.getElementById('s_payment').value.trim();
+  const lat = parseFloat(document.getElementById('s_lat').value);
+  const lng = parseFloat(document.getElementById('s_lng').value);
+
+  if(!name){ alert('店名入れて'); return; }
+  const id = 's' + Date.now();
+  shops.push({id,name,address,payment,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng});
+  persistAll();
+  renderShops(); renderShopSelects(); refreshMap();
+}
+
+function renderShops(){
+  const box = document.getElementById('shopList');
+  if(!shops.length){ box.innerHTML='<div class="small">店舗がまだありません</div>'; return; }
+  let html = '';
+  shops.forEach(s=>{
+    html += `<div class="product"><b>${s.name}</b><div class="small">${s.address || ''}</div>
+    支払い: ${s.payment||'不明'}<div class="small">lat:${s.lat||'-'} lng:${s.lng||'-'}</div></div>`;
+  });
+  box.innerHTML = html;
+  renderShopSelects();
+}
+function renderShopSelects(){
+  const sel = document.getElementById('p_shop');
+  const csel = document.getElementById('c_shop');
+  sel.innerHTML = '<option value="">（未指定）</option>';
+  csel.innerHTML = '<option value="">（未指定）</option>';
+  shops.forEach(s=>{
+    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+    csel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+  });
+}
+
+/* 住所->緯度経度 (Nominatim) */
+async function geocodeAddress(){
+  const addr = document.getElementById('s_address').value.trim();
+  if(!addr){ alert('住所を入力してください'); return; }
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}`);
+    const arr = await res.json();
+    if(arr && arr.length){
+      const lat = arr[0].lat, lon = arr[0].lon;
+      document.getElementById('s_lat').value = lat;
+      document.getElementById('s_lng').value = lon;
+      alert('取得しました: ' + lat + ',' + lon);
+    } else {
+      alert('見つかりませんでした');
+    }
+  } catch(e){ alert('エラー: ' + e.message) }
+}
+
+/* -------------------------
+   商品関連（g/円計算）
+   ------------------------- */
+function addProduct(){
+  const name = document.getElementById('p_name').value.trim();
+  const category = document.getElementById('p_category').value;
+  const price = Number(document.getElementById('p_price').value);
+  const qty = Number(document.getElementById('p_qty').value) || 1;
+  const unitg = Number(document.getElementById('p_unitg').value) || 0;
+  const shopId = document.getElementById('p_shop').value || null;
+  const note = document.getElementById('p_note').value || '';
+
+  if(!name || !price || !unitg){ alert('商品名・価格・1個あたりgは必須です'); return; }
+  const totalG = unitg * qty;
+  const yenPerG = price / totalG;
+  const id = 'p' + Date.now();
+  products.push({id,name,category,price,qty,unitg,totalG,yenPerG,shopId,note,created:Date.now()});
+  persistAll();
+  // clear fields
+  document.getElementById('p_name').value=''; document.getElementById('p_price').value=''; document.getElementById('p_note').value='';
+  renderList();
+}
+
+function clearProducts(){ if(confirm('全部消しますか？')){ products=[]; persistAll(); renderList(); } }
+
+function renderList(){
+  const q = document.getElementById('searchText').value.trim().toLowerCase();
+  const max = Number(document.getElementById('maxPrice').value) || Infinity;
+  const cat = document.getElementById('filterCategory').value;
+  let arr = products.slice();
+  if(q) arr = arr.filter(p=>p.name.toLowerCase().includes(q));
+  if(max!==Infinity) arr = arr.filter(p=>p.price <= max);
+  if(cat) arr = arr.filter(p=>p.category === cat);
+  arr.sort((a,b)=>a.yenPerG - b.yenPerG);
+
+  const best = arr[0];
+  let html = '';
+  if(!arr.length) html = '<div class="small">該当商品がありません</div>';
+  arr.forEach(p=>{
+    const shop = shops.find(s=>s.id===p.shopId);
+    html += `<div class="product ${best && p.id===best.id? 'cheap':''}">
+      <div class="flex-between"><strong>${p.name}</strong><span class="small">${p.category}</span></div>
+      <div class="small">店: ${shop?shop.name:'指定なし'}</div>
+      価格: ${p.price}円 / 合計 ${p.totalG}g<br>
+      <b>円/g: ${p.yenPerG.toFixed(4)}</b>
+      <div style="margin-top:6px">
+        <button onclick="fav('${p.id}')">★お気に入り</button>
+        <button onclick="showProductDetail('${p.id}')">詳細</button>
+      </div>
+      <div class="small">メモ: ${p.note||'なし'}</div>
+    </div>`;
+  });
+  document.getElementById('productList').innerHTML = html;
+  renderRecommend(); // 更新
+}
+
+/* 詳細ダイアログ（簡易） */
+function showProductDetail(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  const shop = shops.find(s=>s.id===p.shopId);
+  alert(`商品: ${p.name}\nカテゴリ: ${p.category}\n店: ${shop?shop.name:'指定なし'}\n価格: ${p.price}円\n合計: ${p.totalG}g\n円/g: ${p.yenPerG.toFixed(4)}\nメモ: ${p.note||'なし'}`);
+}
+
+/* -------------------------
+   比較（店ごとの横並び）
+   ------------------------- */
+function compareByName(){
+  const s = document.getElementById('cmpName').value.trim().toLowerCase();
+  if(!s){ alert('商品名を入れてください'); return; }
+  const matched = products.filter(p=>p.name.toLowerCase().includes(s));
+  if(!matched.length){ document.getElementById('comparison').innerHTML='<div class="small">見つかりません</div>'; return; }
+  // グルーピング by shop
+  let html = '<table style="width:100%;border-collapse:collapse"><tr><th>店</th><th>商品</th><th>価格</th><th>合計g</th><th>円/g</th></tr>';
+  matched.forEach(p=>{
+    const shop = shops.find(s=>s.id===p.shopId);
+    html += `<tr style="border-top:1px solid #f0f0f0"><td>${shop?shop.name:'-'} </td><td>${p.name}</td><td>${p.price}円</td><td>${p.totalG}g</td><td>${p.yenPerG.toFixed(4)}</td></tr>`;
+  });
+  html += '</table>';
+  document.getElementById('comparison').innerHTML = html;
+}
+
+/* -------------------------
+   お気に入り
+   ------------------------- */
+function fav(id){
+  if(favorites.includes(id)) { favorites = favorites.filter(x=>x!==id); }
+  else favorites.push(id);
+  persistAll(); renderList();
+}
+
+/* -------------------------
+   クーポン管理 + 通知
+   ------------------------- */
+function addCoupon(){
+  const title = document.getElementById('c_title').value.trim();
+  const desc = document.getElementById('c_desc').value.trim();
+  const shopId = document.getElementById('c_shop').value || null;
+  const start = document.getElementById('c_start').value;
+  const end = document.getElementById('c_end').value;
+  if(!title || !start){ alert('タイトルと開始日時は必須'); return; }
+  const id = 'c' + Date.now();
+  coupons.push({id,title,desc,shopId,start,end,created:Date.now(),notifiedStart:false});
+  persistAll(); renderCoupons(); scheduleCouponNotifications();
+}
+
+/* 表示 */
+function renderCoupons(){
+  let html = '';
+  if(!coupons.length) html = '<div class="small">クーポンはありません</div>';
+  coupons.forEach(c=>{
+    const shop = shops.find(s=>s.id===c.shopId);
+    html += `<div class="product"><b>${c.title}</b> ${shop? '<div class="small">店: '+shop.name+'</div>':''}
+      <div class="small">${c.desc||''}</div>
+      <div class="small">開始: ${c.start||'—'} 終了: ${c.end||'—'}</div>
+    </div>`;
+  });
+  document.getElementById('couponList').innerHTML = html;
+}
+
+/* Notification Permission */
+async function requestNotificationPermission(){
+  if(!('Notification' in window)){ alert('このブラウザは Notification API をサポートしていません'); return; }
+  const p = await Notification.requestPermission();
+  alert('通知権限: ' + p);
+}
+
+/* スケジュール（ページが開いているときだけ動作） */
+function scheduleCouponNotifications(){
+  if(!('Notification' in window)) return;
+  coupons.forEach(c=>{
+    if(c.notifiedStart) return;
+    const startTime = new Date(c.start).getTime();
+    const now = Date.now();
+    if(startTime <= now){
+      // 既に開始済みならすぐ通知
+      showNotification('クーポン開始: ' + c.title, {body:c.desc||''});
+      c.notifiedStart = true;
+    } else {
+      // setTimeout（長時間の setTimeout は信頼性低いがプロトタイプなので実装）
+      const delay = Math.max(0, startTime - now);
+      setTimeout(()=> { showNotification('クーポン開始: ' + c.title, {body:c.desc||''}); c.notifiedStart=true; persistAll(); renderCoupons(); }, delay);
+    }
+  });
+  persistAll();
+}
+function showNotification(title, options){
+  if(Notification.permission === 'granted'){
+    try { new Notification(title, options); } catch(e){ console.warn(e) }
+  }
+}
+setTimeout(scheduleCouponNotifications,1200);
+
+/* -------------------------
+   掲示板（スレッド + 通報）
+   ------------------------- */
+function addThread(){
+  const name = (document.getElementById('username').value || '').trim();
+  const title = document.getElementById('t_title').value.trim();
+  const body = document.getElementById('t_body').value.trim();
+  if(!name){ alert('ユーザー名を入れてください（右上）'); return; }
+  if(userReports[name] >= 3){ alert('あなたは通報により投稿できません'); return; }
+  if(!title || !body){ alert('タイトルと本文'); return; }
+  const id = 't' + Date.now();
+  threads.unshift({id, author:name, title, body, created:Date.now(), reports:0});
+  persistAll(); renderThreads();
+  document.getElementById('t_title').value=''; document.getElementById('t_body').value='';
+}
+function renderThreads(){
+  let html = '';
+  if(!threads.length) html = '<div class="small">掲示板はまだ投稿がありません</div>';
+  threads.forEach(t=>{
+    html += `<div class="post">
+      <div class="flex-between"><b>${t.title}</b> <div class="small">${t.author} • ${new Date(t.created).toLocaleString()}</div></div>
+      <div class="small">${t.body}</div>
+      <div style="margin-top:6px"><button onclick="reportThread('${t.id}')">通報</button> <span class="small">通報数: ${t.reports}</span></div>
+    </div>`;
+  });
+  document.getElementById('threadList').innerHTML = html;
+}
+function reportThread(threadId){
+  const t = threads.find(x=>x.id===threadId);
+  if(!t) return;
+  t.reports = (t.reports||0) + 1;
+  // 投稿者に対する通報カウント
+  userReports[t.author] = (userReports[t.author]||0) + 1;
+  // 投稿停止条件: 投稿者の通報回数 >= 3 ならそのユーザーは投稿不可（自動）
+  persistAll();
+  alert('通報しました。投稿者の累積通報数: ' + userReports[t.author]);
+  renderThreads();
+}
+
+/* -------------------------
+   シンプル推薦エンジン
+   ------------------------- */
+function renderRecommend(){
+  // 基本: 円/g が小さい順、かつお気に入りを優先
+  let arr = products.slice();
+  if(!arr.length){ document.getElementById('recommendList').innerHTML='<div class="small">商品がありません</div>'; return; }
+  arr.sort((a,b)=>a.yenPerG - b.yenPerG);
+  // favorites 上位表示
+  arr.sort((a,b)=> (favorites.includes(b.id)?1:0) - (favorites.includes(a.id)?1:0) || (a.yenPerG - b.yenPerG));
+  let html = '';
+  arr.slice(0,6).forEach(p=>{
+    const shop = shops.find(s=>s.id===p.shopId);
+    html += `<div class="product"><b>${p.name}</b> ${shop?'<div class="small">'+shop.name+'</div>':''}
+      <div>価格:${p.price}円 / ${p.totalG}g / 円/g:${p.yenPerG.toFixed(4)}</div>
+      <div class="small">お気に入り: ${favorites.includes(p.id)?'★':'-'}</div>
+    </div>`;
+  });
+  document.getElementById('recommendList').innerHTML = html;
+}
+
+/* -------------------------
+   エクスポート・インポート等
+   ------------------------- */
+function saveState(){ persistAll(); alert('保存しました'); }
+function loadState(){ // just re-read
+  products = JSON.parse(localStorage.getItem('products_v1')||'[]');
+  shops = JSON.parse(localStorage.getItem('shops_v1')||'[]');
+  coupons = JSON.parse(localStorage.getItem('coupons_v1')||'[]');
+  threads = JSON.parse(localStorage.getItem('threads_v1')||'[]');
+  userReports = JSON.parse(localStorage.getItem('reports_v1')||'{}');
+  favorites = JSON.parse(localStorage.getItem('fav_v1')||'[]');
+  renderList(); renderShops(); renderCoupons(); renderThreads();
+  alert('ロードしました');
+}
+function exportState(){
+  const data = {products,shops,coupons,threads,userReports,favorites};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'shopping_backup.json'; a.click();
+}
+function importState(){
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange = e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      try{
+        const d = JSON.parse(ev.target.result);
+        products = d.products || products;
+        shops = d.shops || shops;
+        coupons = d.coupons || coupons;
+        threads = d.threads || threads;
+        userReports = d.userReports || userReports;
+        favorites = d.favorites || favorites;
+        persistAll(); loadState();
+        alert('インポート完了');
+      }catch(err){ alert('読み込み失敗: ' + err.message) }
+    };
+    reader.readAsText(f);
+  };
+  inp.click();
+}
+
+/* -------------------------
+   地図（Leaflet）
+   ------------------------- */
+let map ;
+let markersLayer = null;
+let clusterGroup;
+function initMap(){
+  map = L.map('map').setView([34.69958657282452,135.19265800062647], 12); 
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+  // click to add shop pin (quick)
+  map.on('click', e=>{
+    if(!confirm('ここに新しい店舗を追加しますか？（はいで、右の店舗登録フォームに座標が入ります）')) return;
+    document.getElementById('s_lat').value = e.latlng.lat.toFixed(6);
+    document.getElementById('s_lng').value = e.latlng.lng.toFixed(6);
+    switchTab('shops');
+  });
+  refreshMap();
+}
+function refreshMap(){
+  if(!map) return;
+  markersLayer.clearLayers();
+  shops.forEach(s=>{
+    if(s.lat && s.lng){
+      const m = L.marker([s.lat,s.lng]).addTo(markersLayer);
+      let html = `<b>${s.name}</b><div class="small">${s.address||''}</div><div class="small">支払: ${s.payment||'不明'}</div>`;
+      const shopProducts = products.filter(p=>p.shopId===s.id);
+      if(shopProducts.length){
+        html += '<hr><div class="small">商品一覧:</div>';
+        shopProducts.slice(0,6).forEach(p=>{
+          html += `<div>${p.name} - ${p.price}円 (${p.totalG}g) / 円/g:${p.yenPerG.toFixed(4)}</div>`;
+        });
+      }
+      m.bindPopup(html);
+    }
+  });
+}
+
+/* init */
+window.addEventListener('load', ()=>{
+  renderList(); renderShops(); renderCoupons(); renderThreads(); renderRecommend();
+  renderShopSelects();
+  if(!map) initMap();
+  // Pre-schedule coupon notifications if any
+  scheduleCouponNotifications();
+});
+
+/* 初回サンプルデータ（なければ入れる） */
+if(!localStorage.getItem('inited_v1')){
+  // sample shops
+  shops.push({id:'s_tokyo',name:'スーパーA',address:'中央区',payment:'現金,カード',lat:35.68,lng:139.76});
+  shops.push({id:'s_local',name:'ディスカウントB',address:'渋谷区',payment:'現金',lat:35.66,lng:139.7});
+  // sample products
+  products.push({id:'p1',name:'牛乳 1000ml',category:'飲料',price:198,qty:1,unitg:1000,totalG:1000,yenPerG:198/1000,shopId:'s_tokyo',note:'成分無調整',created:Date.now()});
+  products.push({id:'p2',name:'チーズ 6個パック',category:'食品',price:450,qty:6,unitg:30,totalG:180,yenPerG:450/180,shopId:'s_local',note:'セール',created:Date.now()});
+  localStorage.setItem('inited_v1','1'); persistAll();
+  // refresh UI
+  setTimeout(()=>{ renderList(); renderShops(); refreshMap(); },300);
+}
+
+</script>
+</body>
+</html>
