@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>買い物比較フルプロトタイプ</title>
+<title>安値ハンター</title>
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -11,9 +11,9 @@
 
 <style>
   :root{--accent:rgb(0, 150, 187);--muted:#666;--card:#ffffff;--bg:#f6f7fb;}
-  body{font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "メイリオ", "Noto Sans JP", Arial; background:var(--bg); color:#111; margin:0}
-  header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 18px; display:flex; gap:12px; align-items:center; border-bottom:1px solid #e4e7ef}
-  h1{margin:0;font-size:18px}
+body {font-family: 'Avenir','Helvetica Neue','Helvetica','Arial','Hiragino Sans','ヒラギノ角ゴシック',YuGothic,'Yu Gothic','メイリオ', Meiryo,'ＭＳ Ｐゴシック','MS PGothic'  }  
+header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 18px; display:flex; gap:12px; align-items:center; border-bottom:1px solid #e4e7ef}
+  h1{margin:0;font-size:40px}
   main{display:flex; gap:18px; padding:18px; flex-wrap:wrap}
   .col{background:var(--card); border-radius:10px; box-shadow:0 1px 6px rgba(20,30,50,.06); padding:12px; flex:1; min-width:300px; max-width:720px}
   label{display:block;margin:8px 0;font-size:13px}
@@ -71,7 +71,7 @@
         <div class="small">保存は自動で localStorage に保管されます</div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
         <div>
           <label>商品名 <input id="p_name" type="text"></label>
           <label>カテゴリ 
@@ -84,9 +84,9 @@
           <label>1個あたりのグラム (g) <input id="p_unitg" type="number" value="100"></label>
           <label>店　(店舗を作っていれば選択) <select id="p_shop"></select></label>
           <label>メモ（任意） <input id="p_note" type="text"></label>
-          <div style="margin-top:8px">
+          <div style="margin-top:28px">
             <button onclick="addProduct()">商品を追加</button>
-            <button onclick="clearProducts()" style="margin-left:8px;background:#ddd;color:#000">全部消す</button>
+            <button onclick="clearProducts()" style="margin-left:10px;background:#ddd;color:#000">全部消す</button>
           </div>
         </div>
       </div>
