@@ -11,7 +11,7 @@
 
 <style>
   :root{--accent:#46C1AF;--muted:#666;--card:#FAFAF5;--bg:#f6f7fb;}
-body {background-color:#FCCF04}
+body {background-color:#f6e27c}
 /* body {background-image:url(./img/S__4079260.jpg);background-position: center;background-size:  cover;} */
 body{font-family: 'Avenir','Helvetica Neue','Helvetica','Arial','Hiragino Sans','ヒラギノ角ゴシック',YuGothic,'Yu Gothic','メイリオ', Meiryo,'ＭＳ Ｐゴシック','MS PGothic'  }  
 /* header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%);} */
@@ -19,13 +19,9 @@ header{ padding:12px 18px; display:flex; gap:12px; align-items:center; }
 header {
   position: relative; /* 必要に応じて */
 }
-/* header{background-image:url();background-position: center;background-size:  cover;} */
 /* class="h" */
 div.h:hover{
-  /* background-color: black;
-  font : #FAFAF5; */
-  border-width:5px;
-  transition: background-color 0.3s ease;
+  border-width:1px solid black;
 	font-weight: bold;
 }
 
@@ -56,9 +52,9 @@ header::after {
   .product{padding:10px; margin:8px 0; border-radius:8px}
   /* .cheap{background:#f0fff3} */
   nav{display:flex; gap:8px; align-items:center}
-  .tabs{display:flex; gap:20px; margin-bottom:8px;border:1px;}
-  .tab{padding:6px 10px; border-radius:8px; background:#46C1AF; border:1px solid black; cursor:pointer}
-  .tab.active{background:var(--accent); color:#022; font-weight:700}
+  .tabs{display:flex; gap:20px; margin-bottom:8px; }
+  .tab{padding:6px 10px; border-radius:8px; background:#46C1AF;cursor:pointer}
+  .tab.active{background:var(--accent); color:#022;border:1px solid black; font-weight:700}
   #map{height:330px; border-radius:8px}
   .row{display:flex; gap:8px}
   .chip{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #e7e9ee;background:#fff;font-size:12px;margin-right:6px}
@@ -94,11 +90,21 @@ header::after {
       <div class="h">
         <div class="tab active" data-tab="products" onclick="switchTab('products')">商品一覧・比較</div>
       </div>
-      <div class="tab" data-tab="shops" onclick="switchTab('shops')">店舗</div>
-      <div class="tab" data-tab="map" onclick="switchTab('map')">地図</div>
-      <div class="tab" data-tab="coupons" onclick="switchTab('coupons')">クーポン・通知</div>
-      <div class="tab" data-tab="bbs" onclick="switchTab('bbs')">掲示板</div>
-      <div class="tab" data-tab="recommend" onclick="switchTab('recommend')">おすすめ</div>
+      <div class="h">
+        <div class="tab" data-tab="shops" onclick="switchTab('shops')">店舗</div>
+      </div>
+      <div class="h">
+        <div class="tab" data-tab="map" onclick="switchTab('map')">地図</div>
+      </div>
+      <div class="h">
+        <div class="tab" data-tab="coupons" onclick="switchTab('coupons')">クーポン・通知</div>
+      </div>
+      <div class="h">
+        <div class="tab" data-tab="bbs" onclick="switchTab('bbs')">掲示板</div>
+      </div>
+      <div class="h">
+        <div class="tab" data-tab="recommend" onclick="switchTab('recommend')">おすすめ</div>
+      </div>
     </div>
 
     <!-- PRODUCTS TAB -->
