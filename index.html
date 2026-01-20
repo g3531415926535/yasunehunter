@@ -10,21 +10,54 @@
   integrity="sha256-sA+e2jvH7qq6q8v+Xf5xk0s1t2vQqv3uZfX3x0i0m0o=" crossorigin=""/>
 
 <style>
-  :root{--accent:rgb(0, 150, 187);--muted:#666;--card:#ffffff;--bg:#f6f7fb;}
-body {font-family: 'Avenir','Helvetica Neue','Helvetica','Arial','Hiragino Sans','ヒラギノ角ゴシック',YuGothic,'Yu Gothic','メイリオ', Meiryo,'ＭＳ Ｐゴシック','MS PGothic'  }  
-header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 18px; display:flex; gap:12px; align-items:center; border-bottom:1px solid #e4e7ef}
-  h1{margin:0;font-size:40px}
-  main{display:flex; gap:18px; padding:18px; flex-wrap:wrap}
+  :root{--accent:#46C1AF;--muted:#666;--card:#FAFAF5;--bg:#f6f7fb;}
+body {background-color:#FCCF04}
+/* body {background-image:url(./img/S__4079260.jpg);background-position: center;background-size:  cover;} */
+body{font-family: 'Avenir','Helvetica Neue','Helvetica','Arial','Hiragino Sans','ヒラギノ角ゴシック',YuGothic,'Yu Gothic','メイリオ', Meiryo,'ＭＳ Ｐゴシック','MS PGothic'  }  
+/* header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%);} */
+header{ padding:12px 18px; display:flex; gap:12px; align-items:center; }
+header {
+  position: relative; /* 必要に応じて */
+}
+/* header{background-image:url();background-position: center;background-size:  cover;} */
+/* class="h" */
+div.h:hover{
+  /* background-color: black;
+  font : #FAFAF5; */
+  border-width:5px;
+  transition: background-color 0.3s ease;
+	font-weight: bold;
+}
+
+/* #FCCF04 ひまわり色
+　 #46C1AF ぶるーばーど
+   #FAFAF5 くりーむしちゅー*/
+
+header::after {
+  content: "";       /* これが必須 */
+  display: block;    /* ブロック要素にして線を表現 */
+  width: 100%;       /*幅を100%に*/
+  height: 1px;       /* 線の太さ */
+  background-color: black; /*線の色*/
+  position: absolute;
+  bottom: 0;         /* 下部に配置 */
+}
+  h1{margin:0;font-size:40px;}
+  .h_en{color:#FAFAF5;font-size:20px}
+  main{display:flex; gap:25px; padding:18px; flex-wrap:wrap}
   .col{background:var(--card); border-radius:10px; box-shadow:0 1px 6px rgba(20,30,50,.06); padding:12px; flex:1; min-width:300px; max-width:720px}
   label{display:block;margin:8px 0;font-size:13px}
-  input[type="text"], input[type="number"], select, textarea{width:100%; padding:8px; border-radius:6px; border:1px solid #d9dce6}
-  button{background:var(--accent); color:#022; border:none; padding:8px 12px; border-radius:8px; cursor:pointer}
+  input[type="text"], input[type="number"], select, textarea{width:95%; padding:8px; border-radius:6px; border:1px solid #d9dce6}
+  select{width:100%;}
+  button{background:var(--accent)}button{color:#022;border:1px solid black;}
+  button{ padding:8px 12px; border-radius:8px; cursor:pointer}
   .small{font-size:12px;color:var(--muted)}
-  .product{border:1px solid #e8eef4; padding:10px; margin:8px 0; border-radius:8px}
-  .cheap{background:#f0fff3}
+  .product{border:1px solid #e8eef4}
+  .product{padding:10px; margin:8px 0; border-radius:8px}
+  /* .cheap{background:#f0fff3} */
   nav{display:flex; gap:8px; align-items:center}
-  .tabs{display:flex; gap:6px; margin-bottom:8px}
-  .tab{padding:6px 10px; border-radius:8px; background:#fff; border:1px solid #e7e9ee; cursor:pointer}
+  .tabs{display:flex; gap:20px; margin-bottom:8px;border:1px;}
+  .tab{padding:6px 10px; border-radius:8px; background:#46C1AF; border:1px solid black; cursor:pointer}
   .tab.active{background:var(--accent); color:#022; font-weight:700}
   #map{height:330px; border-radius:8px}
   .row{display:flex; gap:8px}
@@ -39,10 +72,12 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
 </style>
 </head>
 <body>
-<header>
+<header style="font-family:ヒラギノ角ゴ">
   <div style="flex:1">
-    <h1>安値ハンター</h1>
-
+    <h1>
+        <span>安値ハンター</span>
+        <span class="h_en"> yasune-hunter</span>
+    </h1>
   <div style="text-align:right">
     <div class="small">ユーザー名</div>
     <input id="username" placeholder="名前を入れてください" style="width:160px;padding:6px;border-radius:8px;border:1px solid #ddd">
@@ -55,11 +90,13 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
 <main>
   <!-- 左カラム：登録・検索・一覧 -->
   <section class="col" style="flex:0.9">
-    <div class="tabs" id="mainTabs">
-      <div class="tab active" data-tab="products" onclick="switchTab('products')">商品一覧 / 比較</div>
+    <div class="tabs" id="mainTabs" >
+      <div class="h">
+        <div class="tab active" data-tab="products" onclick="switchTab('products')">商品一覧・比較</div>
+      </div>
       <div class="tab" data-tab="shops" onclick="switchTab('shops')">店舗</div>
       <div class="tab" data-tab="map" onclick="switchTab('map')">地図</div>
-      <div class="tab" data-tab="coupons" onclick="switchTab('coupons')">クーポン/通知</div>
+      <div class="tab" data-tab="coupons" onclick="switchTab('coupons')">クーポン・通知</div>
       <div class="tab" data-tab="bbs" onclick="switchTab('bbs')">掲示板</div>
       <div class="tab" data-tab="recommend" onclick="switchTab('recommend')">おすすめ</div>
     </div>
@@ -68,13 +105,13 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
     <div id="tab-products" class="tabpane">
       <div class="flex-between">
         <h3>商品登録（まとめ売り・小分け対応）</h3>
-        <div class="small">保存は自動で localStorage に保管されます</div>
+        <!-- <div class="small">保存は自動で localStorage に保管されます</div> -->
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
         <div>
           <label>商品名 <input id="p_name" type="text"></label>
-          <label>カテゴリ 
+          <label>カテゴリ
             <select id="p_category"></select>
           </label>
           <label>価格 (円) <input id="p_price" type="number"></label>
@@ -82,11 +119,11 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
         </div>
         <div>
           <label>1個あたりのグラム (g) <input id="p_unitg" type="number" value="100"></label>
-          <label>店　(店舗を作っていれば選択) <select id="p_shop"></select></label>
+          <label>店の種類<select id="p_shop"></select></label>
           <label>メモ（任意） <input id="p_note" type="text"></label>
           <div style="margin-top:28px">
-            <button onclick="addProduct()">商品を追加</button>
-            <button onclick="clearProducts()" style="margin-left:10px;background:#ddd;color:#000">全部消す</button>
+            <button onclick="addProduct()"style="margin-left:170px">商品を追加</button>
+            <button onclick="clearProducts()" style="margin: left 2px;background:#46C1AF;color:#000">全部消す</button>
           </div>
         </div>
       </div>
@@ -97,7 +134,7 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
         <input id="searchText" placeholder="商品名で検索" style="flex:1;padding:8px;border-radius:8px;border:1px solid #ddd">
         <input id="maxPrice" type="number" placeholder="最大価格" style="width:120px">
         <select id="filterCategory" style="width:160px">
-          <option value="">カテゴリで絞る</option>
+          <option value="">カテゴリ一覧</option>
         </select>
         <button onclick="renderList()">検索/更新</button>
       </div>
@@ -108,20 +145,19 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
     <!-- SHOPS TAB -->
     <div id="tab-shops" class="tabpane" style="display:none">
       <h3>店舗登録</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
-          <label>店名 <input id="s_name" type="text"></label>
-          <label>住所（任意） <input id="s_address" type="text"></label>
-          <label>支払い方法（カンマ区切り） <input id="s_payment" type="text" placeholder="現金,カード,電子マネー"></label>
+          <label>店名 <input id="s_name" type="text" placeholder="〇〇スーパー〇〇店"></label>
+          <label>住所（任意） <input id="s_address" type="text" placeholder="〇〇県〇〇市〇〇町99-9"></label>
+          <label>支払い方法（カンマ区切り） <input id="s_payment" type="text" placeholder="現金,カード,電子マネー(〇〇pay等)"></label>
         </div>
         <div>
-          <label>緯度 (lat) <input id="s_lat" type="text" placeholder="例:35.6895"></label>
-          <label>経度 (lng) <input id="s_lng" type="text" placeholder="例:139.6917"></label>
-          <div style="margin-top:8px">
-            <button onclick="addShop()">店舗を追加</button>
-            <button onclick="geocodeAddress()" style="margin-left:6px;background:#ddd;color:#000">住所から緯度経度取得</button>
+          <label>緯度<input id="s_lat" type="text" placeholder="例:35.6895"></label>
+          <label>経度<input id="s_lng" type="text" placeholder="例:139.6917"></label>
+          <div style="margin-top:28px">
+            <button onclick="addShop()">店舗詳細を追加</button>
+            <button onclick="geocodeAddress()" style="margin-left:6px;background:#46C1AF;color:#000">住所から緯度経度取得</button>
           </div>
-          <div class="small">※ 住所->緯度経度は Nominatim を使います（ネット接続が必要）</div>
         </div>
       </div>
       <hr>
@@ -130,10 +166,10 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
 
     <!-- MAP TAB -->
     <div id="tab-map" class="tabpane" style="display:none">
-      <h3>地図（店舗ピン）</h3>
+      <h3>地図</h3>
       <h3>ここをクリック</h3>
       <a href="https://maps.google.com/">
-        <button>Click Me!</button>
+        <button>地図を表示</button>
     </a>
       <div id="map"></div>
       <div class="small" style="margin-top:8px">地図上のピンをクリックすると店舗情報とその店の商品一覧が見られます。</div>
@@ -149,8 +185,8 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
         </div>
         <div>
           <label>説明 <input id="c_desc" type="text"></label>
-          <label>開始日時 (ローカル) <input id="c_start" type="datetime-local"></label>
-          <label>終了日時 (ローカル) <input id="c_end" type="datetime-local"></label>
+          <label>開始日時<input id="c_start" type="datetime-local"></label>
+          <label>終了日時<input id="c_end" type="datetime-local"></label>
         </div>
       </div>
       <div style="margin-top:8px">
@@ -162,7 +198,7 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
 
     <!-- BBS TAB -->
     <div id="tab-bbs" class="tabpane" style="display:none">
-      <h3>掲示板（SNS風）</h3>
+      <h3>掲示板</h3>
       <label>スレッドタイトル <input id="t_title" type="text"></label>
       <label>内容 <textarea id="t_body" rows="3"></textarea></label>
       <div style="display:flex;gap:8px;align-items:center">
@@ -175,8 +211,8 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
 
     <!-- RECOMMEND TAB -->
     <div id="tab-recommend" class="tabpane" style="display:none">
-      <h3>あなたへのおすすめ（簡易レコメンド）</h3>
-      <div class="small">ルール: g/円 の安い商品 + あなたが保存した商品種（お気に入り）を優先</div>
+      <h3>あなたへのおすすめ</h3>
+      <div class="small">※円/gの安い商品やお気に入り登録した商品が優先して表示されます。</div>
       <div id="recommendList"></div>
     </div>
   </section>
@@ -192,7 +228,7 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
 
     <h3>お気に入り / ローカル保存</h3>
     <div style="display:flex;gap:8px">
-      <button onclick="saveState()">今の状態を手動保存</button>
+      <button onclick="saveState()">今の状態を<br>手動保存</button>
       <button onclick="loadState()">読み込む</button>
       <button onclick="exportState()">JSON 書き出し</button>
       <button onclick="importState()">JSON 読込</button>
@@ -201,16 +237,19 @@ header{background:linear-gradient(90deg,#ffffff 0%, #eefcf2 100%); padding:12px 
 
     <hr>
 
-    <h3>ヘルプ / Tips</h3>
+    <h3>ヘルプ</h3>
     <ul class="small">
       <li>商品は <b>個数 × 1個あたりのg</b> で合計グラムを計算し、<b>円/グラム</b> を算出します。</li>
-      <li>掲示板は簡易ユーザー名ベースです。本番では認証を別途導入してください。</li>
-      <li>地図の緯度経度は Nominatim で取得できます（API制限あり）。</li>
+      <li>掲示板は現在未実装です</li>
+      <!-- <li>地図の緯度経度は Nominatim で取得できます（API制限あり）。</li> -->
     </ul>
   </aside>
 </main>
 
-<footer>プロトタイプ — ローカルデータ保存 / Leaflet 地図 / Notification API の試用</footer>
+<footer>
+  <a href=https://g3531415926535.github.io/yasunehunter>ホームに戻る<a>
+
+</footer>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -257,7 +296,7 @@ setTimeout(switchTabInit,100);
 /* -------------------------
    カテゴリ初期化
    ------------------------- */
-const defaultCats = ['食品','飲料','日用品','自販機','冷凍食品','その他'];
+const defaultCats = ['ー食品ー','肉','魚','野菜','果物','お惣菜','米','パン','麺','乳製品（牛乳 等は飲料に含まれる）','お菓子','アイス','調味料','冷凍食品','インスタント・レトルト食品','ー飲料ー','お茶','ジュース','栄養ドリンク','乳製品','ー日用品ー','洗剤','袋','掘り出し物','ーその他ー','その他食品','その他飲料','その他日用品','該当なし商品'];
 function refreshCategories(){
   const sel = document.getElementById('p_category');
   const filter = document.getElementById('filterCategory');
@@ -308,8 +347,6 @@ function renderShopSelects(){
     csel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
   });
 }
-
-/* 住所->緯度経度 (Nominatim) */
 async function geocodeAddress(){
   const addr = document.getElementById('s_address').value.trim();
   if(!addr){ alert('住所を入力してください'); return; }
